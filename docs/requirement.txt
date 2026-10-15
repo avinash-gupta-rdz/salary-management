@@ -1,0 +1,63 @@
+Requirement Doc - Salary Management
+
+Goal
+----
+ACME HR team manages salary data for ~10k employees across multiple countries in Excel sheets. It's slow, error prone and hard to answer simple questions like "how much we pay engineers in India".
+We want a web app where HR manager can manage employee salary data in one place and quickly get answers about how the org pays people.
+
+User: HR Manager (only user for now)
+
+
+Features (in scope)
+-------------------
+
+1) Employee management
+- add / view / edit / delete employee
+- fields: full name, email, job title, department, country, currency, annual salary, employment type, hire date
+- list page with pagination, search by name/email, filter by country/department/job title, sort by salary/name/hire date
+- validations: required fields, unique email, salary > 0, valid country + currency
+
+2) Salary history
+- every salary change gets saved (old salary, new salary, effective date, reason optional)
+- HR can see salary history of any employee
+
+3) Salary insights (main thing)
+- by country -> headcount, min, max, avg, median salary, total payroll cost
+- by job title in a country -> min, avg, max
+- by department -> headcount, avg salary
+- org level -> total payroll in USD
+- salary distribution in a country / job title 
+
+4) Multi currency
+- salary stored in employee's local currency
+- fixed exchange rate table to convert to USD so countries can be compared
+
+5) Seed data
+- seed script to create 10k employees across different countries, departments and job titles
+
+
+Non functional
+--------------
+- performance: pagination + filters on server side, aggregations done in SQL, indexes on country, job title, department, email
+- tests: fast unit + request specs for core stuff (validations, insights calc, currency conversion)
+- auth: app level HTTP basic auth, single HR manager credential from env
+- stack: Rails API + SQLite, React frontend, deployed as single docker image
+
+
+Out of scope (and why)
+----------------------
+- payroll run / payslips / payment processing -> that's a separate product, ask here is salary management and insights
+- tax calculation / tax templates -> rules differ per country and keep changing, too big for this
+- salary structure templates (components, deductions, slabs) -> lot of complexity, single annual salary is enough to answer pay questions
+- employee self service portal -> only persona given is HR manager, second role means extra auth + whole new UI
+- role based access / SSO -> only one type of user for now, app level basic auth is enough
+- live currency rates -> fixed rates keeps results same every time and easy to test, no external dependency
+- leave / attendance / bonus / equity -> doesn't change base salary data, would blow up data model
+- bulk excel/csv import -> nice to have, add/edit + seed covers main flow.
+- multi language -> english is fine for HR for now
+
+
+Later maybe
+-----------
+- csv import/export
+- role based access

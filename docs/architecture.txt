@@ -1,0 +1,20 @@
+Architecture
+------------
+
+  [ React (vite) ]
+         |  JSON /api/v1
+         v
+  [ Rails API ] -> controllers, models, services
+         |
+         v
+  [ SQLite ]
+
+Prod -> single docker image, rails serves react build + api
+
+
+Data model
+- employees -> full_name, email (unique), job_title, department, country_code, currency, annual_salary, employment_type, hire_date
+- salary_changes -> employee_id, old_salary, new_salary, effective_date, reason
+- exchange_rates -> currency (unique), rate_to_usd
+- indexes -> email, country_code, job_title, department, (country_code + job_title)
+

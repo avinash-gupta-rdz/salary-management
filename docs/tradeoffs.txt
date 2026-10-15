@@ -1,0 +1,22 @@
+Tradeoffs
+---------
+
+1) Separate react app vs react inside rails -> separate vite app in /frontend, served from rails public/ in prod. clean separation and still one deploy, cost is two dev servers locally
+
+2) SQLite vs Postgres -> sqlite, zero setup and 10k rows is small. not good for many concurrent writers, moving to postgres is mostly config
+
+3) Aggregations in SQL vs Ruby -> SQL (group by, avg, min, max), fast and no loading all rows in memory. median not native in sqlite so done separately
+
+4) Server side vs client side pagination -> server side, 10k rows in browser is heavy. cost is more api params to handle
+
+5) Single annual salary vs salary components -> single salary, enough to answer pay questions. components can be added later
+
+6) Fixed vs live currency rates -> fixed table in db, results same every time and easy to test. numbers can drift from real rates
+
+7) Own salary_changes table vs paper_trail gem -> own table, only need salary changes and easy to query. doesn't track other field changes
+
+8) Auth -> HTTP basic auth at app level with creds from env, single persona given so no users table / sessions / roles. not enough for real multi user prod, would need proper login + roles then
+
+9) Seeding -> insert_all in batches with fixed random seed, 10k rows in seconds and same data every run. skips validations so seed data built carefully
+
+10) Insights on request vs cached -> on request, 10k rows aggregates in ms and always fresh. add caching or summary tables if data grows a lot
