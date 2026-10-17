@@ -37,8 +37,6 @@ export async function apiRequest<T>(
     method,
     headers: {
       Accept: 'application/json',
-      // Tells Rails to answer 401 with JSON instead of the browser's login popup.
-      'X-Requested-With': 'XMLHttpRequest',
       ...(body !== undefined && { 'Content-Type': 'application/json' }),
       ...(token && { Authorization: `Basic ${token}` }),
     },

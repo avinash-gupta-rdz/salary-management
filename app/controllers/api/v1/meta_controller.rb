@@ -6,8 +6,9 @@ module Api
         render json: {
           data: {
             countries: Country.all.map(&:to_h),
-            departments: Employee.distinct.order(:department).pluck(:department),
-            job_titles: Employee.distinct.order(:job_title).pluck(:job_title),
+            departments: Department.names,
+            job_titles: Department.job_titles.sort,
+            job_titles_by_department: Department.all.to_h { |department| [ department.name, department.job_titles ] },
             employment_types: Employee.employment_types.keys
           }
         }

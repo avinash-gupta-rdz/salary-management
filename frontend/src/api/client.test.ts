@@ -13,7 +13,7 @@ describe('buildQuery', () => {
 })
 
 describe('apiRequest', () => {
-  it('sends the stored credentials and asks Rails for a JSON 401', async () => {
+  it('sends the stored credentials', async () => {
     saveToken('aHI6cGFzc3dvcmQ=')
     const fetchMock = mockApi({ 'GET /api/v1/meta': () => ({ body: { data: {} } }) })
 
@@ -21,7 +21,15 @@ describe('apiRequest', () => {
 
     const headers = fetchMock.mock.calls[0][1]?.headers as Record<string, string>
     expect(headers.Authorization).toBe('Basic aHI6cGFzc3dvcmQ=')
-    expect(headers['X-Requested-With']).toBe('XMLHttpRequest')
+  })
+
+  it('sends write bodies as JSON (the API rejects anything else)', async () => {
+    const fetchMock = mockApi({ 'POST /api/v1/employees': () => ({ status: 201, body: { data: {} } }) })
+
+    await apiRequest('/employees', { method: 'POST', body: { employee: {} } })
+
+    const headers = fetchMock.mock.calls[0][1]?.headers as Record<string, string>
+    expect(headers['Content-Type']).toBe('application/json')
   })
 
   it('throws field errors from a 422', async () => {

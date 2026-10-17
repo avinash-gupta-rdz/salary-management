@@ -41,6 +41,15 @@ RSpec.describe "Insights API", type: :request do
     expect(json["data"]["buckets"].sum { |bucket| bucket["count"] }).to eq(1)
   end
 
+  it "fails clearly when a currency has no rate" do
+    ExchangeRate.where(currency: "INR").delete_all
+
+    get "/api/v1/insights/summary", headers: auth_headers
+
+    expect(response).to have_http_status(:internal_server_error)
+    expect(json).to eq("error" => "No exchange rate for INR")
+  end
+
   it "rejects an unsupported country" do
     get "/api/v1/insights/by_job_title", params: { country_code: "FR" }, headers: auth_headers
 

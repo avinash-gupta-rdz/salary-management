@@ -55,6 +55,34 @@ describe('EmployeeFormPage', () => {
     })
   })
 
+  it('offers only the job titles of the chosen department', async () => {
+    mockApi({
+      'GET /api/v1/meta': () => ({ body: { data: META } }),
+      [`GET /api/v1/employees/${EMPLOYEE.id}`]: () => ({ body: { data: EMPLOYEE } }),
+    })
+    renderEditPage()
+
+    await userEvent.click(await screen.findByRole('combobox', { name: /department/i }))
+    await userEvent.click(screen.getByRole('option', { name: 'Sales' }))
+    await userEvent.click(screen.getByRole('combobox', { name: /job title/i }))
+
+    const options = screen.getAllByRole('option').map((option) => option.textContent)
+    expect(options).toEqual(['Account Executive'])
+  })
+
+  it('asks for the salary in the new currency when the country changes', async () => {
+    mockApi({
+      'GET /api/v1/meta': () => ({ body: { data: META } }),
+      [`GET /api/v1/employees/${EMPLOYEE.id}`]: () => ({ body: { data: EMPLOYEE } }),
+    })
+    renderEditPage()
+
+    await userEvent.click(await screen.findByRole('combobox', { name: /country/i }))
+    await userEvent.click(screen.getByRole('option', { name: 'United States' }))
+
+    expect(screen.getByText('US pays in USD, not INR. Enter the new annual salary in USD.')).toBeInTheDocument()
+  })
+
   it('shows server validation errors next to the fields', async () => {
     mockApi({
       'GET /api/v1/meta': () => ({ body: { data: META } }),

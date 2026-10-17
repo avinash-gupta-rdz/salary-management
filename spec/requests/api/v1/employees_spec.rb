@@ -30,6 +30,16 @@ RSpec.describe "Employees API", type: :request do
       expect(json["data"].first).to include("currency" => "INR", "annual_salary" => 1_000_000.0, "annual_salary_usd" => 12_000.0)
     end
 
+    it "fails clearly instead of showing $0 when a currency has no rate" do
+      ExchangeRate.where(currency: "GBP").delete_all
+      create(:employee, country_code: "GB")
+
+      get "/api/v1/employees", headers: auth_headers
+
+      expect(response).to have_http_status(:internal_server_error)
+      expect(json).to eq("error" => "No exchange rate for GBP")
+    end
+
     it "searches by name or email, ignoring case" do
       create(:employee, full_name: "Priya Sharma", email: "priya@acme.test")
       create(:employee, full_name: "John Smith", email: "john@acme.test")
@@ -87,6 +97,16 @@ RSpec.describe "Employees API", type: :request do
       expect(json["data"]).to include("id" => employee.id, "country_name" => "Germany", "currency" => "EUR", "annual_salary_usd" => 75_600.0)
     end
 
+    it "fails clearly instead of 404 when the employee's currency has no rate" do
+      ExchangeRate.where(currency: "GBP").delete_all
+      employee = create(:employee, country_code: "GB")
+
+      get "/api/v1/employees/#{employee.id}", headers: auth_headers
+
+      expect(response).to have_http_status(:internal_server_error)
+      expect(json).to eq("error" => "No exchange rate for GBP")
+    end
+
     it "returns 404 for an unknown employee" do
       get "/api/v1/employees/0", headers: auth_headers
 
@@ -108,7 +128,7 @@ RSpec.describe "Employees API", type: :request do
 
     it "creates the employee with the country's currency" do
       expect {
-        post "/api/v1/employees", params: valid_params, headers: auth_headers
+        post "/api/v1/employees", params: valid_params, headers: auth_headers, as: :json
       }.to change(Employee, :count).by(1)
 
       expect(response).to have_http_status(:created)
@@ -116,20 +136,20 @@ RSpec.describe "Employees API", type: :request do
     end
 
     it "ignores a currency sent by the client" do
-      post "/api/v1/employees", params: valid_params.deep_merge(employee: { currency: "USD" }), headers: auth_headers
+      post "/api/v1/employees", params: valid_params.deep_merge(employee: { currency: "USD" }), headers: auth_headers, as: :json
 
       expect(json["data"]["currency"]).to eq("SGD")
     end
 
     it "returns field errors for invalid input" do
-      post "/api/v1/employees", params: valid_params.deep_merge(employee: { email: "bad", annual_salary: 0 }), headers: auth_headers
+      post "/api/v1/employees", params: valid_params.deep_merge(employee: { email: "bad", annual_salary: 0 }), headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(json["errors"]).to include("email" => [ "is invalid" ], "annual_salary" => [ "must be greater than 0" ])
     end
 
     it "returns 400 when the employee payload is missing" do
-      post "/api/v1/employees", params: {}, headers: auth_headers
+      post "/api/v1/employees", params: {}, headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:bad_request)
     end
@@ -139,7 +159,7 @@ RSpec.describe "Employees API", type: :request do
     let!(:employee) { create(:employee, annual_salary: 1_000_000) }
 
     it "updates the employee" do
-      patch "/api/v1/employees/#{employee.id}", params: { employee: { job_title: "Engineering Manager" } }, headers: auth_headers
+      patch "/api/v1/employees/#{employee.id}", params: { employee: { job_title: "Engineering Manager" } }, headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:ok)
       expect(employee.reload.job_title).to eq("Engineering Manager")
@@ -148,7 +168,7 @@ RSpec.describe "Employees API", type: :request do
     it "records a salary change with its reason" do
       patch "/api/v1/employees/#{employee.id}",
             params: { employee: { annual_salary: 1_100_000, salary_change_reason: "Promotion", salary_effective_date: "2026-04-01" } },
-            headers: auth_headers
+            headers: auth_headers, as: :json
 
       expect(employee.salary_changes.sole).to have_attributes(
         old_salary: BigDecimal("1000000"), new_salary: BigDecimal("1100000"),
@@ -156,8 +176,16 @@ RSpec.describe "Employees API", type: :request do
       )
     end
 
+    it "refuses a country change without a new salary" do
+      patch "/api/v1/employees/#{employee.id}", params: { employee: { country_code: "US" } }, headers: auth_headers, as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(json["errors"]["annual_salary"].first).to start_with("must be re-entered in USD")
+      expect(employee.reload.currency).to eq("INR")
+    end
+
     it "does not change anything when invalid" do
-      patch "/api/v1/employees/#{employee.id}", params: { employee: { annual_salary: -5 } }, headers: auth_headers
+      patch "/api/v1/employees/#{employee.id}", params: { employee: { annual_salary: -5 } }, headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(employee.reload.annual_salary).to eq(1_000_000)

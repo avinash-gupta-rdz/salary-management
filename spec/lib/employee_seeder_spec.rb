@@ -7,13 +7,19 @@ RSpec.describe EmployeeSeeder do
     described_class.new(count: count, random: Random.new(seed)).call
   end
 
+  it "has a salary band for every job title" do
+    expect(described_class::SALARY_BANDS.keys).to match_array(Department.job_titles)
+  end
+
   it "inserts the requested number of employees" do
     expect(seed(count: 50)).to eq(50)
     expect(Employee.count).to eq(50)
   end
 
   it "produces employees that pass model validations" do
-    seed
+    # Large enough to include accented names such as Müller.
+    seed(count: 300)
+    expect(Employee.where("full_name LIKE ?", "%ü%")).to exist
 
     invalid = Employee.all.reject(&:valid?)
     expect(invalid).to be_empty, invalid.map { |e| [ e.email, e.errors.full_messages ] }.inspect

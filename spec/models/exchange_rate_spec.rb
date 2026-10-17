@@ -60,7 +60,7 @@ RSpec.describe ExchangeRate, type: :model do
     end
 
     it "raises when the currency has no rate" do
-      expect { described_class.to_usd(100, "JPY") }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { described_class.to_usd(100, "JPY") }.to raise_error(ExchangeRate::Missing, "No exchange rate for JPY")
     end
   end
 end

@@ -138,16 +138,24 @@ function SalaryHistory({ employee }: { employee: Employee }) {
           </TableHead>
           <TableBody>
             {changes.map((change) => {
+              const sameCurrency = change.old_currency === change.new_currency
               const percent = ((change.new_salary - change.old_salary) / change.old_salary) * 100
               return (
                 <TableRow key={change.id}>
                   <TableCell>{formatDate(change.effective_date)}</TableCell>
-                  <TableCell align="right">{formatMoney(change.old_salary, change.currency)}</TableCell>
-                  <TableCell align="right">{formatMoney(change.new_salary, change.currency)}</TableCell>
-                  <TableCell align="right" sx={{ color: percent >= 0 ? 'success.main' : 'error.main' }}>
-                    {percent >= 0 ? '+' : ''}
-                    {percent.toFixed(1)}%
-                  </TableCell>
+                  <TableCell align="right">{formatMoney(change.old_salary, change.old_currency)}</TableCell>
+                  <TableCell align="right">{formatMoney(change.new_salary, change.new_currency)}</TableCell>
+                  {/* A % across currencies (INR -> USD) would be meaningless. */}
+                  {sameCurrency ? (
+                    <TableCell align="right" sx={{ color: percent >= 0 ? 'success.main' : 'error.main' }}>
+                      {percent >= 0 ? '+' : ''}
+                      {percent.toFixed(1)}%
+                    </TableCell>
+                  ) : (
+                    <TableCell align="right" sx={{ color: 'text.secondary' }}>
+                      Moved {change.old_currency} → {change.new_currency}
+                    </TableCell>
+                  )}
                   <TableCell>{change.reason ?? '—'}</TableCell>
                 </TableRow>
               )

@@ -23,8 +23,12 @@ class EmployeeSerializer
 
   private
 
-  # List queries select the USD amount in SQL; single records convert on demand.
+  # List queries select the USD amount in SQL (NULL when the LEFT JOIN finds no
+  # rate); single records convert on demand. Either way a missing rate raises
+  # instead of being shown as 0.
   def annual_salary_usd
-    @employee.has_attribute?(:annual_salary_usd) ? @employee[:annual_salary_usd] : @employee.annual_salary_usd
+    return @employee.annual_salary_usd unless @employee.has_attribute?(:annual_salary_usd)
+
+    @employee[:annual_salary_usd] or raise ExchangeRate::Missing, @employee.currency
   end
 end

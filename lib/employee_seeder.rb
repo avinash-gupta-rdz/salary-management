@@ -6,39 +6,25 @@
 class EmployeeSeeder
   BATCH_SIZE = 1_000
 
-  # job title => annual salary band in USD (min, max)
-  JOB_TITLES = {
-    "Engineering" => {
-      "Software Engineer" => [ 60_000, 110_000 ],
-      "Senior Software Engineer" => [ 90_000, 150_000 ],
-      "Engineering Manager" => [ 120_000, 180_000 ],
-      "QA Engineer" => [ 45_000, 80_000 ],
-      "DevOps Engineer" => [ 70_000, 120_000 ]
-    },
-    "Product" => {
-      "Product Manager" => [ 80_000, 140_000 ],
-      "Product Designer" => [ 60_000, 110_000 ]
-    },
-    "Sales" => {
-      "Account Executive" => [ 50_000, 100_000 ],
-      "Sales Manager" => [ 80_000, 140_000 ]
-    },
-    "Marketing" => {
-      "Marketing Specialist" => [ 45_000, 80_000 ],
-      "Marketing Manager" => [ 75_000, 130_000 ]
-    },
-    "Finance" => {
-      "Accountant" => [ 45_000, 80_000 ],
-      "Financial Analyst" => [ 55_000, 95_000 ]
-    },
-    "People" => {
-      "HR Generalist" => [ 40_000, 70_000 ],
-      "Recruiter" => [ 45_000, 80_000 ]
-    },
-    "Operations" => {
-      "Operations Analyst" => [ 45_000, 80_000 ],
-      "Customer Support Specialist" => [ 30_000, 55_000 ]
-    }
+  # job title => annual salary band in USD (min, max). Titles come from Department.
+  SALARY_BANDS = {
+    "Software Engineer" => [ 60_000, 110_000 ],
+    "Senior Software Engineer" => [ 90_000, 150_000 ],
+    "Engineering Manager" => [ 120_000, 180_000 ],
+    "QA Engineer" => [ 45_000, 80_000 ],
+    "DevOps Engineer" => [ 70_000, 120_000 ],
+    "Product Manager" => [ 80_000, 140_000 ],
+    "Product Designer" => [ 60_000, 110_000 ],
+    "Account Executive" => [ 50_000, 100_000 ],
+    "Sales Manager" => [ 80_000, 140_000 ],
+    "Marketing Specialist" => [ 45_000, 80_000 ],
+    "Marketing Manager" => [ 75_000, 130_000 ],
+    "Accountant" => [ 45_000, 80_000 ],
+    "Financial Analyst" => [ 55_000, 95_000 ],
+    "HR Generalist" => [ 40_000, 70_000 ],
+    "Recruiter" => [ 45_000, 80_000 ],
+    "Operations Analyst" => [ 45_000, 80_000 ],
+    "Customer Support Specialist" => [ 30_000, 55_000 ]
   }.freeze
 
   # country code => [share of headcount, pay factor relative to the US]
@@ -96,16 +82,18 @@ class EmployeeSeeder
   def attributes_for(number, rates)
     first_name = FIRST_NAMES.sample(random: @random)
     last_name = LAST_NAMES.sample(random: @random)
-    department, titles = JOB_TITLES.to_a.sample(random: @random)
-    job_title, (band_min, band_max) = titles.to_a.sample(random: @random)
+    department = Department.all.sample(random: @random)
+    job_title = department.job_titles.sample(random: @random)
+    band_min, band_max = SALARY_BANDS.fetch(job_title)
     country = Country.find(weighted_pick(COUNTRY_PROFILES.transform_values(&:first)))
     pay_factor = COUNTRY_PROFILES.fetch(country.code).last
 
     {
       full_name: "#{first_name} #{last_name}",
-      email: "#{first_name}.#{last_name}.#{number}@acme.test".downcase,
+      # Names like Müller are fine, but email addresses must be ASCII to pass validation.
+      email: I18n.transliterate("#{first_name}.#{last_name}.#{number}@acme.test").downcase,
       job_title: job_title,
-      department: department,
+      department: department.name,
       country_code: country.code,
       currency: country.currency,
       annual_salary: local_salary(band_min, band_max, pay_factor, rates.fetch(country.currency)),

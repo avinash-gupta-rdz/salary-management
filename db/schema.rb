@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_074609) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_150358) do
   create_table "employees", force: :cascade do |t|
     t.string "full_name", null: false
     t.string "email", null: false
@@ -47,6 +47,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_074609) do
     t.string "reason"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "old_currency", limit: 3, null: false
+    t.string "new_currency", limit: 3, null: false
     t.index ["employee_id", "effective_date"], name: "index_salary_changes_on_employee_id_and_effective_date"
     t.check_constraint "old_salary > 0 AND new_salary > 0", name: "salary_change_amounts_positive"
   end

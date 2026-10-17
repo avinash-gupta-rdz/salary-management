@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react'
 import Alert from '@mui/material/Alert'
-import Autocomplete from '@mui/material/Autocomplete'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
@@ -53,10 +52,22 @@ function EmployeeForm({ employee, meta }: { employee?: Employee; meta: Meta }) {
   const isEdit = employee !== undefined
   const salaryChanged = isEdit && Number(values.annual_salary) !== employee.annual_salary
   const currency = meta.countries.find((country) => country.code === values.country_code)?.currency
+  const currencyChanged = isEdit && currency !== undefined && currency !== employee.currency
   const [today] = useState(() => new Date().toISOString().slice(0, 10))
 
   function set<K extends keyof EmployeeInput>(field: K, value: EmployeeInput[K]) {
     setValues((current) => ({ ...current, [field]: value }))
+  }
+
+  const jobTitles = meta.job_titles_by_department[values.department] ?? []
+
+  // Job titles belong to a department, so a title from the old one is cleared.
+  function changeDepartment(department: string) {
+    setValues((current) => ({
+      ...current,
+      department,
+      job_title: (meta.job_titles_by_department[department] ?? []).includes(current.job_title) ? current.job_title : '',
+    }))
   }
 
   function errorFor(field: string) {
@@ -122,22 +133,40 @@ function EmployeeForm({ employee, meta }: { employee?: Employee; meta: Meta }) {
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <Autocomplete
-            freeSolo
-            options={meta.job_titles}
-            inputValue={values.job_title}
-            onInputChange={(_, value) => set('job_title', value)}
-            renderInput={(params) => <TextField {...params} label="Job title" required {...errorFor('job_title')} />}
-          />
+          <TextField
+            select
+            label="Department"
+            value={values.department}
+            onChange={(e) => changeDepartment(e.target.value)}
+            required
+            fullWidth
+            {...errorFor('department')}
+          >
+            {meta.departments.map((department) => (
+              <MenuItem key={department} value={department}>
+                {department}
+              </MenuItem>
+            ))}
+          </TextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <Autocomplete
-            freeSolo
-            options={meta.departments}
-            inputValue={values.department}
-            onInputChange={(_, value) => set('department', value)}
-            renderInput={(params) => <TextField {...params} label="Department" required {...errorFor('department')} />}
-          />
+          <TextField
+            select
+            label="Job title"
+            value={values.job_title}
+            onChange={(e) => set('job_title', e.target.value)}
+            required
+            fullWidth
+            disabled={jobTitles.length === 0}
+            {...errorFor('job_title')}
+            helperText={errorFor('job_title').helperText ?? (jobTitles.length === 0 ? 'Choose a department first' : ' ')}
+          >
+            {jobTitles.map((title) => (
+              <MenuItem key={title} value={title}>
+                {title}
+              </MenuItem>
+            ))}
+          </TextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
@@ -201,6 +230,14 @@ function EmployeeForm({ employee, meta }: { employee?: Employee; meta: Meta }) {
             slotProps={{ inputLabel: { shrink: true }, htmlInput: { max: today } }}
           />
         </Grid>
+
+        {currencyChanged && !salaryChanged && (
+          <Grid size={12}>
+            <Alert severity="warning">
+              {values.country_code} pays in {currency}, not {employee.currency}. Enter the new annual salary in {currency}.
+            </Alert>
+          </Grid>
+        )}
 
         {salaryChanged && (
           <>

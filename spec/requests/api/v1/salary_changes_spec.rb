@@ -4,14 +4,16 @@ RSpec.describe "Salary changes API", type: :request do
   it "lists an employee's salary changes, latest first" do
     employee = create(:employee, country_code: "GB")
     older = create(:salary_change, employee: employee, effective_date: Date.new(2025, 4, 1), reason: "Annual review")
-    newer = create(:salary_change, employee: employee, effective_date: Date.new(2026, 4, 1), reason: "Promotion")
+    newer = create(:salary_change, employee: employee, effective_date: Date.new(2026, 4, 1), reason: "Relocation",
+                                   old_currency: "INR", new_currency: "GBP")
     create(:salary_change) # another employee's change
 
     get "/api/v1/employees/#{employee.id}/salary_changes", headers: auth_headers
 
     expect(response).to have_http_status(:ok)
     expect(response.parsed_body["data"].pluck("id")).to eq([ newer.id, older.id ])
-    expect(response.parsed_body["data"].first).to include("currency" => "GBP", "reason" => "Promotion")
+    # Each side keeps its own currency, even after the employee moved country.
+    expect(response.parsed_body["data"].first).to include("old_currency" => "INR", "new_currency" => "GBP", "reason" => "Relocation")
   end
 
   it "returns 404 for an unknown employee" do

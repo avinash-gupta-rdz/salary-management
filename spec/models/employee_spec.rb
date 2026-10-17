@@ -18,6 +18,30 @@ RSpec.describe Employee, type: :model do
     end
   end
 
+  describe "department and job title" do
+    it "rejects a department that isn't on the list" do
+      employee.department = "Engg"
+
+      expect(employee).not_to be_valid
+      expect(employee.errors[:department]).to include("is not a known department")
+    end
+
+    it "rejects a job title from another department" do
+      employee.department = "Sales"
+      employee.job_title = "Software Engineer"
+
+      expect(employee).not_to be_valid
+      expect(employee.errors[:job_title]).to include("is not a role in Sales")
+    end
+
+    it "accepts a job title that belongs to the department" do
+      employee.department = "Sales"
+      employee.job_title = "Account Executive"
+
+      expect(employee).to be_valid
+    end
+  end
+
   describe "email" do
     it "rejects an invalid format" do
       employee.email = "not-an-email"
@@ -56,6 +80,24 @@ RSpec.describe Employee, type: :model do
     end
   end
 
+  describe "changing country" do
+    let!(:employee) { create(:employee, country_code: "IN", annual_salary: 1_613_000) }
+
+    it "requires the salary to be re-entered, instead of re-labelling INR as USD" do
+      employee.country_code = "US"
+
+      expect(employee).not_to be_valid
+      expect(employee.errors[:annual_salary]).to include("must be re-entered in USD because the new country pays in USD, not INR")
+      expect(employee.reload).to have_attributes(currency: "INR", annual_salary: BigDecimal("1613000"))
+    end
+
+    it "is allowed together with a new salary" do
+      employee.update!(country_code: "US", annual_salary: 90_000)
+
+      expect(employee.reload).to have_attributes(currency: "USD", annual_salary: BigDecimal("90000"))
+    end
+  end
+
   describe "currency" do
     it "is set from the country" do
       employee.country_code = "GB"
@@ -66,7 +108,7 @@ RSpec.describe Employee, type: :model do
 
     it "follows the country when the country changes" do
       employee.save!
-      employee.update!(country_code: "DE")
+      employee.update!(country_code: "DE", annual_salary: 70_000)
 
       expect(employee.reload.currency).to eq("EUR")
     end
@@ -157,6 +199,21 @@ RSpec.describe Employee, type: :model do
       employee.update!(job_title: "Senior Software Engineer")
 
       expect(employee.salary_changes).to be_empty
+    end
+
+    it "records both currencies when the employee moves country with a new salary" do
+      employee.update!(country_code: "US", annual_salary: 90_000)
+
+      expect(employee.salary_changes.sole).to have_attributes(
+        old_salary: BigDecimal("1000000"), old_currency: "INR",
+        new_salary: BigDecimal("90000"), new_currency: "USD"
+      )
+    end
+
+    it "records the currency on both sides for an ordinary raise" do
+      employee.update!(annual_salary: 1_100_000)
+
+      expect(employee.salary_changes.sole).to have_attributes(old_currency: "INR", new_currency: "INR")
     end
 
     it "records nothing on create" do

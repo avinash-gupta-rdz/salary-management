@@ -33,14 +33,16 @@ export interface Meta {
   countries: Country[]
   departments: string[]
   job_titles: string[]
+  job_titles_by_department: Record<string, string[]>
   employment_types: EmploymentType[]
 }
 
 export interface SalaryChange {
   id: number
   old_salary: number
+  old_currency: string
   new_salary: number
-  currency: string
+  new_currency: string
   effective_date: string
   reason: string | null
   created_at: string

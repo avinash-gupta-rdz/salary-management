@@ -4,8 +4,6 @@
 # (one currency per country, so they are directly comparable). Anything that
 # spans countries is converted to USD with the fixed exchange rates.
 class SalaryInsights
-  class MissingExchangeRate < StandardError; end
-
   LOCAL_SALARY = "employees.annual_salary".freeze
   USD_SALARY = "(employees.annual_salary * exchange_rates.rate_to_usd)".freeze
   DEFAULT_BUCKETS = 10
@@ -115,7 +113,7 @@ class SalaryInsights
   # under-reporting payroll. Fail loudly instead.
   def ensure_exchange_rates!
     missing = Employee.where.not(currency: ExchangeRate.select(:currency)).distinct.pluck(:currency)
-    raise MissingExchangeRate, "No exchange rate for #{missing.join(', ')}" if missing.any?
+    raise ExchangeRate::Missing, missing if missing.any?
   end
 
   # salary/group are internal SQL fragments (constants or column names), never user input.

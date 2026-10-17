@@ -10,8 +10,9 @@ module Api
             {
               id: change.id,
               old_salary: change.old_salary.to_f,
+              old_currency: change.old_currency,
               new_salary: change.new_salary.to_f,
-              currency: employee.currency,
+              new_currency: change.new_currency,
               effective_date: change.effective_date,
               reason: change.reason,
               created_at: change.created_at

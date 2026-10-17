@@ -36,7 +36,7 @@ RSpec.describe SalaryInsights do
       ExchangeRate.where(currency: "GBP").delete_all
       create(:employee, country_code: "GB")
 
-      expect { insights.summary }.to raise_error(SalaryInsights::MissingExchangeRate, /GBP/)
+      expect { insights.summary }.to raise_error(ExchangeRate::Missing, "No exchange rate for GBP")
     end
   end
 

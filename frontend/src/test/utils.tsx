@@ -38,7 +38,8 @@ export const META = {
     { code: 'US', name: 'United States', currency: 'USD' },
   ],
   departments: ['Engineering', 'Sales'],
-  job_titles: ['Software Engineer', 'Account Executive'],
+  job_titles: ['Account Executive', 'Software Engineer'],
+  job_titles_by_department: { Engineering: ['Software Engineer'], Sales: ['Account Executive'] },
   employment_types: ['full_time', 'part_time', 'contract'],
 }
 
