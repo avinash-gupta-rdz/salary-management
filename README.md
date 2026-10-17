@@ -60,13 +60,28 @@ RAILS_ENV=production HR_USERNAME=admin HR_PASSWORD=change-me bin/rails server
 | `HR_USERNAME`, `HR_PASSWORD` | HR manager login. Required in production; if missing, every API request is refused. |
 | `RAILS_MASTER_KEY` | Rails credentials (from `config/master.key`) |
 
-### Deploy (own server, Kamal)
+### Deploy
 
-1. Set the server IP / host and registry in `config/deploy.yml`.
-2. Export `HR_USERNAME` and `HR_PASSWORD` in your shell (read by `.kamal/secrets`).
-3. `bin/kamal setup` the first time, then `bin/kamal deploy`.
+Live at **http://80.225.218.192** (Oracle Cloud ARM VM, Ubuntu 24.04, plain HTTP — no domain yet).
 
-The SQLite database lives in the `storage` volume. On first boot `db:prepare` creates it and runs the seeds, so the app starts with 10,000 employees. Later deploys keep the data.
+Deploys use Kamal with its local registry: the image is built where `kamal` runs and pushed to the server over an SSH tunnel, so no Docker Hub / GHCR account is needed. The SQLite database lives in the `salary_maanagement_storage` volume. On first boot `db:prepare` creates it and runs the seeds, so the app starts with 10,000 employees. Later deploys keep the data.
+
+**Automatic:** every push to `main` that passes CI is deployed by `.github/workflows/deploy.yml` (native ARM runner, so no emulation). It can also be started from the Actions tab. Repository secrets it needs:
+
+| Secret | Value |
+|---|---|
+| `SSH_PRIVATE_KEY` | deploy key whose public half is in the server's `~/.ssh/authorized_keys` |
+| `SSH_KNOWN_HOSTS` | pinned server host key (`ssh-keyscan 80.225.218.192`) |
+| `RAILS_MASTER_KEY` | contents of `config/master.key` |
+| `HR_USERNAME`, `HR_PASSWORD` | production HR login |
+
+**From a laptop:** HR credentials are kept in the git-ignored `.env.deploy`.
+
+```bash
+set -a; . ./.env.deploy; set +a
+bin/kamal deploy        # bin/kamal setup the very first time
+bin/kamal logs          # tail production logs
+```
 
 ## API
 

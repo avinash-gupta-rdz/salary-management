@@ -7,7 +7,7 @@ image: salary_maanagement
 # Deploy to these servers.
 servers:
   web:
-    - 192.168.0.1
+    - 80.225.218.192
   # job:
   #   hosts:
   #     - 192.168.0.1
@@ -23,6 +23,8 @@ servers:
 # proxy:
 #   ssl: true
 #   host: app.example.com
+#
+# No domain yet: kamal-proxy serves the app over plain HTTP on the server IP.
 
 # Where you keep your container images.
 registry:
@@ -76,7 +78,8 @@ volumes:
 
 # Configure the image builder.
 builder:
-  arch: amd64
+  # The server is an ARM (aarch64) Oracle Cloud VM.
+  arch: arm64
 
   # # Build image via remote server (useful for faster amd64 builds on arm64 computers)
   # remote: ssh://docker@docker-builder-server
@@ -88,9 +91,13 @@ builder:
   #   - GITHUB_TOKEN
   #   - RAILS_MASTER_KEY
 
-# Use a different ssh user than root
-# ssh:
-#   user: app
+# SSH as the default Ubuntu user (in the docker group). Locally the personal key
+# is used; GitHub Actions points KAMAL_SSH_KEY at its own deploy key.
+ssh:
+  user: ubuntu
+  keys_only: true
+  keys:
+    - <%= ENV.fetch("KAMAL_SSH_KEY", "~/.ssh/oci_vm") %>
 
 # Use accessory services (secrets come from .kamal/secrets).
 # accessories:
