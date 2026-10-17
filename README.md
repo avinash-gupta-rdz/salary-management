@@ -64,7 +64,7 @@ RAILS_ENV=production HR_USERNAME=admin HR_PASSWORD=change-me bin/rails server
 
 Live at **http://80.225.218.192** (Oracle Cloud ARM VM, Ubuntu 24.04, plain HTTP — no domain yet).
 
-Deploys use Kamal with its local registry: the image is built where `kamal` runs and pushed to the server over an SSH tunnel, so no Docker Hub / GHCR account is needed. The SQLite database lives in the `salary_maanagement_storage` volume. On first boot `db:prepare` creates it and runs the seeds, so the app starts with 10,000 employees. Later deploys keep the data.
+Deploys use Kamal. From a laptop it uses Kamal's local registry (the server pulls the image through an SSH tunnel, no registry account needed). GitHub Actions pushes to GitHub Container Registry instead, authenticated with the workflow's own `GITHUB_TOKEN`: the tunnel back to a US-hosted runner timed out mid-pull. `KAMAL_REGISTRY=ghcr` switches `config/deploy.yml` between the two. The SQLite database lives in the `salary_maanagement_storage` volume. On first boot `db:prepare` creates it and runs the seeds, so the app starts with 10,000 employees. Later deploys keep the data.
 
 **Automatic:** every push to `main` that passes CI is deployed by `.github/workflows/deploy.yml` (native ARM runner, so no emulation). It can also be started from the Actions tab. Repository secrets it needs:
 

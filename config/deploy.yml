@@ -1,8 +1,15 @@
 # Name of your application. Used to uniquely configure containers.
 service: salary_maanagement
 
+# Registry choice:
+# - Laptop deploys use Kamal's local registry: the server pulls the image through
+#   an SSH tunnel to the machine running kamal (fine on a short network path).
+# - GitHub Actions sets KAMAL_REGISTRY=ghcr: the tunnel to a US runner timed out
+#   mid-pull, so CI pushes to GitHub Container Registry and the server pulls from it.
+<% ghcr = ENV["KAMAL_REGISTRY"] == "ghcr" %>
+
 # Name of the container image (use your-user/app-name on external registries).
-image: salary_maanagement
+image: <%= ghcr ? "avinash-gupta-rdz/salary_maanagement" : "salary_maanagement" %>
 
 # Deploy to these servers.
 servers:
@@ -28,15 +35,15 @@ servers:
 
 # Where you keep your container images.
 registry:
-  # Alternatives: hub.docker.com / registry.digitalocean.com / ghcr.io / ...
+<% if ghcr %>
+  server: ghcr.io
+  username: avinash-gupta-rdz
+  # The workflow's short-lived GITHUB_TOKEN (packages: write).
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+<% else %>
   server: localhost:5555
-
-  # Needed for authenticated registries.
-  # username: your-user
-
-  # Always use an access token rather than real password when possible.
-  # password:
-  #   - KAMAL_REGISTRY_PASSWORD
+<% end %>
 
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 env:

@@ -13,6 +13,10 @@ concurrency:
   group: deploy-production
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  packages: write # push the image to ghcr.io
+
 jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
@@ -48,6 +52,8 @@ jobs:
 
       - name: Deploy with Kamal
         env:
+          KAMAL_REGISTRY: ghcr
+          KAMAL_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
           HR_USERNAME: ${{ secrets.HR_USERNAME }}
           HR_PASSWORD: ${{ secrets.HR_PASSWORD }}
         run: bin/kamal deploy
