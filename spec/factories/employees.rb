@@ -5,7 +5,6 @@ FactoryBot.define do
     job_title { "Software Engineer" }
     department { "Engineering" }
     country_code { "IN" }
-    currency { "INR" }
     annual_salary { 1_200_000 }
     employment_type { "full_time" }
     hire_date { Date.new(2022, 4, 1) }

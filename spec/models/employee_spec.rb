@@ -8,7 +8,7 @@ RSpec.describe Employee, type: :model do
   end
 
   describe "required fields" do
-    %i[full_name email job_title department country_code currency annual_salary employment_type hire_date].each do |field|
+    %i[full_name email job_title department country_code annual_salary employment_type hire_date].each do |field|
       it "requires #{field}" do
         employee[field] = nil
 
@@ -41,27 +41,52 @@ RSpec.describe Employee, type: :model do
     end
   end
 
-  describe "country_code and currency" do
-    it "are stored upcased" do
+  describe "country_code" do
+    it "is stored upcased" do
       employee.country_code = "us"
-      employee.currency = "usd"
 
       expect(employee.country_code).to eq("US")
-      expect(employee.currency).to eq("USD")
     end
 
-    it "rejects a country code that is not 2 letters" do
-      employee.country_code = "IND"
+    it "rejects a country ACME does not operate in" do
+      employee.country_code = "FR"
 
       expect(employee).not_to be_valid
-      expect(employee.errors[:country_code]).to include("must be a 2-letter ISO code")
+      expect(employee.errors[:country_code]).to include("is not supported")
+    end
+  end
+
+  describe "currency" do
+    it "is set from the country" do
+      employee.country_code = "GB"
+      employee.validate
+
+      expect(employee.currency).to eq("GBP")
     end
 
-    it "rejects a currency that is not 3 letters" do
-      employee.currency = "RS"
+    it "follows the country when the country changes" do
+      employee.save!
+      employee.update!(country_code: "DE")
 
-      expect(employee).not_to be_valid
-      expect(employee.errors[:currency]).to include("must be a 3-letter ISO code")
+      expect(employee.reload.currency).to eq("EUR")
+    end
+
+    it "ignores a currency that does not match the country" do
+      employee.country_code = "SG"
+      employee.currency = "USD"
+      employee.save!
+
+      expect(employee.reload.currency).to eq("SGD")
+    end
+  end
+
+  describe "#annual_salary_usd" do
+    it "converts the salary using the currency's rate" do
+      create(:exchange_rate, currency: "INR", rate_to_usd: "0.012")
+      employee.annual_salary = 1_200_000
+      employee.validate
+
+      expect(employee.annual_salary_usd).to eq(BigDecimal("14400"))
     end
   end
 

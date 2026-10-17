@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_033229) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_063007) do
   create_table "employees", force: :cascade do |t|
     t.string "full_name", null: false
     t.string "email", null: false
@@ -28,5 +28,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_033229) do
     t.index ["email"], name: "index_employees_on_email", unique: true
     t.index ["job_title"], name: "index_employees_on_job_title"
     t.check_constraint "annual_salary > 0", name: "annual_salary_positive"
+  end
+
+  create_table "exchange_rates", force: :cascade do |t|
+    t.string "currency", limit: 3, null: false
+    t.decimal "rate_to_usd", precision: 18, scale: 8, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["currency"], name: "index_exchange_rates_on_currency", unique: true
+    t.check_constraint "rate_to_usd > 0", name: "rate_to_usd_positive"
   end
 end
