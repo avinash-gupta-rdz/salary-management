@@ -153,8 +153,17 @@ function CountrySection() {
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, lg: 5 }}>
             <BarChart
-              height={300}
-              xAxis={[{ scaleType: 'band', data: data.map((row) => row.country_name ?? row.country_code) }]}
+              height={330}
+              xAxis={[
+                {
+                  scaleType: 'band',
+                  data: data.map((row) => row.country_name ?? row.country_code),
+                  // Show every country; angled so long names like "United Kingdom" don't get dropped.
+                  tickLabelInterval: () => true,
+                  tickLabelStyle: { angle: -30, textAnchor: 'end', fontSize: 12 },
+                  height: 80,
+                },
+              ]}
               yAxis={[{ valueFormatter: (value: number) => formatCompactMoney(value, 'USD') }]}
               series={[
                 {
