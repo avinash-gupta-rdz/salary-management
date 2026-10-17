@@ -16,9 +16,11 @@ Features (in scope)
 - fields: full name, email, job title, department, country, currency, annual salary, employment type, hire date
 - list page with pagination, search by name/email, filter by country/department/job title, sort by salary/name/hire date
 - validations: required fields, unique email, salary > 0, valid country + currency
+- department and job title picked from a fixed list, job title must belong to the department (free text would split "Engineering" / "engineering" in insights)
+- changing country -> salary must be re-entered in the new country's currency (otherwise INR amount just becomes USD)
 
 2) Salary history
-- every salary change gets saved (old salary, new salary, effective date, reason optional)
+- every salary change gets saved (old salary, new salary, both currencies, effective date, reason optional)
 - HR can see salary history of any employee
 
 3) Salary insights (main thing)
@@ -29,7 +31,8 @@ Features (in scope)
 - salary distribution in a country / job title 
 
 4) Multi currency
-- salary stored in employee's local currency
+- 6 countries (India, US, UK, Germany, Singapore, Canada), one currency per country
+- salary stored in employee's local currency, currency set from country (HR doesn't pick it)
 - fixed exchange rate table to convert to USD so countries can be compared
 
 5) Seed data
