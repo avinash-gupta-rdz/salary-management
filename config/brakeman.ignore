@@ -1,0 +1,65 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "1aa559f6e211c7a2174228973bb151609b44e4ffc9edffee3432a9a5d7f37e1d",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/services/salary_insights.rb",
+      "line": 143,
+      "code": "Arel.sql(\"ROW_NUMBER() OVER (#{(\"PARTITION BY #{group}\" or \"\")} ORDER BY #{salary}) AS position\")",
+      "confidence": "Medium",
+      "note": "False positive: interpolated SQL is built only from internal constants (LOCAL_SALARY/USD_SALARY), fixed column names and numbers computed in code. User input (country_code, job_title) is passed via where() bind parameters."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "4417a484e4ce6cde1ba8f277ca6d5d370b28994df0818b1b9685ca3c17868578",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/services/salary_insights.rb",
+      "line": 141,
+      "code": "Arel.sql(\"#{(group or \"NULL\")} AS group_value\")",
+      "confidence": "Medium",
+      "note": "False positive: interpolated SQL is built only from internal constants (LOCAL_SALARY/USD_SALARY), fixed column names and numbers computed in code. User input (country_code, job_title) is passed via where() bind parameters."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "650a9bfcca529c6e755b81b35fcefe5debb526208f6d91f1a2fa8b33d9826bee",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/services/salary_insights.rb",
+      "line": 144,
+      "code": "Arel.sql(\"COUNT(*) OVER (#{(\"PARTITION BY #{group}\" or \"\")}) AS group_size\")",
+      "confidence": "Medium",
+      "note": "False positive: interpolated SQL is built only from internal constants (LOCAL_SALARY/USD_SALARY), fixed column names and numbers computed in code. User input (country_code, job_title) is passed via where() bind parameters."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "6e17b8574c850ea1a7ac6e4c91e19a1d856f9339ebab020b3d317a87cadc4765",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/services/salary_insights.rb",
+      "line": 142,
+      "code": "Arel.sql(\"#{salary} AS salary\")",
+      "confidence": "Medium",
+      "note": "False positive: interpolated SQL is built only from internal constants (LOCAL_SALARY/USD_SALARY), fixed column names and numbers computed in code. User input (country_code, job_title) is passed via where() bind parameters."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "8fb208192fac5758005825feb24c1fa9ca17481ce76ab588cea1b930d092bc04",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/services/salary_insights.rb",
+      "line": 62,
+      "code": "Arel.sql(\"MIN(#{salary})\")",
+      "confidence": "Medium",
+      "note": "False positive: interpolated SQL is built only from internal constants (LOCAL_SALARY/USD_SALARY), fixed column names and numbers computed in code. User input (country_code, job_title) is passed via where() bind parameters."
+    }
+  ],
+  "brakeman_version": "8.1.0"
+}

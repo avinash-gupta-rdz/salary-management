@@ -9,6 +9,14 @@ Rails.application.routes.draw do
         resources :salary_changes, only: :index
       end
       resource :meta, only: :show, controller: :meta
+
+      scope :insights, controller: :insights, as: :insights do
+        get :summary
+        get :by_country
+        get :by_job_title
+        get :by_department
+        get :distribution
+      end
     end
   end
 end
