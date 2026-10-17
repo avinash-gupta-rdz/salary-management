@@ -130,6 +130,46 @@ RSpec.describe Employee, type: :model do
     end
   end
 
+  describe "salary history" do
+    let!(:employee) { create(:employee, annual_salary: 1_000_000) }
+
+    it "records the old and new salary when the salary changes" do
+      travel_to Date.new(2026, 5, 10) do
+        employee.update!(annual_salary: 1_150_000, salary_change_reason: "Annual review")
+      end
+
+      change = employee.salary_changes.sole
+      expect(change).to have_attributes(
+        old_salary: BigDecimal("1000000"),
+        new_salary: BigDecimal("1150000"),
+        effective_date: Date.new(2026, 5, 10),
+        reason: "Annual review"
+      )
+    end
+
+    it "uses the given effective date" do
+      employee.update!(annual_salary: 1_150_000, salary_effective_date: Date.new(2026, 4, 1))
+
+      expect(employee.salary_changes.sole.effective_date).to eq(Date.new(2026, 4, 1))
+    end
+
+    it "records nothing when other fields change" do
+      employee.update!(job_title: "Senior Software Engineer")
+
+      expect(employee.salary_changes).to be_empty
+    end
+
+    it "records nothing on create" do
+      expect(employee.salary_changes).to be_empty
+    end
+
+    it "is removed with the employee" do
+      employee.update!(annual_salary: 1_150_000)
+
+      expect { employee.destroy }.to change(SalaryChange, :count).by(-1)
+    end
+  end
+
   describe "name fields" do
     it "squishes extra whitespace" do
       employee.full_name = "  Jane   Doe "
