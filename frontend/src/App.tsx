@@ -1,20 +1,40 @@
-import AppBar from '@mui/material/AppBar'
-import Container from '@mui/material/Container'
-import Toolbar from '@mui/material/Toolbar'
-import Typography from '@mui/material/Typography'
+import { lazy, Suspense } from 'react'
+import CircularProgress from '@mui/material/CircularProgress'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { useAuth } from './auth/useAuth'
+import Layout from './components/Layout'
+import EmployeeDetailPage from './pages/EmployeeDetailPage'
+import EmployeeFormPage from './pages/EmployeeFormPage'
+import EmployeeListPage from './pages/EmployeeListPage'
+import LoginPage from './pages/LoginPage'
+
+// Charts are the heaviest dependency; load them only when Insights is opened.
+const InsightsPage = lazy(() => import('./pages/InsightsPage'))
 
 function App() {
+  const { isAuthenticated } = useAuth()
+
+  if (!isAuthenticated) return <LoginPage />
+
   return (
-    <>
-      <AppBar position="static" elevation={0}>
-        <Toolbar>
-          <Typography variant="h6" component="h1">
-            Salary Management
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      <Container maxWidth="lg" sx={{ py: 4 }} />
-    </>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<Navigate to="/employees" replace />} />
+        <Route path="employees" element={<EmployeeListPage />} />
+        <Route path="employees/new" element={<EmployeeFormPage />} />
+        <Route path="employees/:id" element={<EmployeeDetailPage />} />
+        <Route path="employees/:id/edit" element={<EmployeeFormPage />} />
+        <Route
+          path="insights"
+          element={
+            <Suspense fallback={<CircularProgress />}>
+              <InsightsPage />
+            </Suspense>
+          }
+        />
+        <Route path="*" element={<Navigate to="/employees" replace />} />
+      </Route>
+    </Routes>
   )
 }
 

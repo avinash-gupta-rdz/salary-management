@@ -9,16 +9,25 @@ class ApplicationController < ActionController::API
   private
 
   def authenticate_hr_manager
-    expected = Rails.configuration.x.hr_auth
+    return if authenticate_with_http_basic { |username, password| valid_hr_credentials?(username, password) }
 
-    authenticate_or_request_with_http_basic("Salary Management") do |username, password|
-      next false if expected.username.blank? || expected.password.blank?
-
-      # Both comparisons always run, so the response time doesn't reveal which one failed.
-      username_ok = ActiveSupport::SecurityUtils.secure_compare(username, expected.username)
-      password_ok = ActiveSupport::SecurityUtils.secure_compare(password, expected.password)
-      username_ok && password_ok
+    # The React app shows its own login screen. Without the WWW-Authenticate
+    # challenge header the browser won't pop up its native login dialog.
+    if request.xhr?
+      render json: { error: "Unauthorized" }, status: :unauthorized
+    else
+      request_http_basic_authentication("Salary Management")
     end
+  end
+
+  def valid_hr_credentials?(username, password)
+    expected = Rails.configuration.x.hr_auth
+    return false if expected.username.blank? || expected.password.blank?
+
+    # Both comparisons always run, so the response time doesn't reveal which one failed.
+    username_ok = ActiveSupport::SecurityUtils.secure_compare(username, expected.username)
+    password_ok = ActiveSupport::SecurityUtils.secure_compare(password, expected.password)
+    username_ok && password_ok
   end
 
   def render_not_found

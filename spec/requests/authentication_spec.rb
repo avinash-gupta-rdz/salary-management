@@ -8,6 +8,14 @@ RSpec.describe "Authentication", type: :request do
     expect(response.headers["WWW-Authenticate"]).to include("Basic")
   end
 
+  it "answers the frontend with JSON and no browser login challenge" do
+    get "/api/v1/employees", headers: { "X-Requested-With" => "XMLHttpRequest" }
+
+    expect(response).to have_http_status(:unauthorized)
+    expect(response.headers["WWW-Authenticate"]).to be_nil
+    expect(response.parsed_body).to eq("error" => "Unauthorized")
+  end
+
   it "rejects a wrong password" do
     get "/api/v1/employees", headers: auth_headers(password: "wrong")
 
