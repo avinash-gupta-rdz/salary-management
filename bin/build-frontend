@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Builds the React app and places it where Rails serves it in production:
+#   assets (hashed, cached for a year) -> public/assets
+#   app shell (never cached)           -> public/app.html (served by FrontendController)
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+(cd frontend && npm ci && npm run build)
+
+rm -rf public/assets public/app.html
+cp -R frontend/dist/assets public/assets
+cp frontend/dist/favicon.svg public/favicon.svg
+cp frontend/dist/index.html public/app.html
+echo "Frontend built into public/"

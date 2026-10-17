@@ -1,2 +1,11 @@
-#!/usr/bin/env ruby
-exec "./bin/rails", "server", *ARGV
+#!/usr/bin/env bash
+# Starts the Rails API (port 3000) and the Vite dev server (port 5173) together.
+# Open http://localhost:5173 — Vite proxies /api to Rails.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+npm run dev --prefix frontend &
+VITE_PID=$!
+trap 'kill "$VITE_PID" 2>/dev/null' EXIT INT TERM
+
+bin/rails server "$@"

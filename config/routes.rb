@@ -19,4 +19,8 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  # React app: everything that isn't the API, a static file or the health check.
+  root "frontend#index"
+  get "*path", to: "frontend#index", constraints: ->(request) { !request.path.start_with?("/api/") && request.format.html? }
 end

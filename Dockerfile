@@ -27,6 +27,14 @@ ENV RAILS_ENV="production" \
     BUNDLE_WITHOUT="development" \
     LD_PRELOAD="/usr/local/lib/libjemalloc.so"
 
+# Build the React app (only the static output is kept)
+FROM docker.io/library/node:22-slim AS frontend
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
 # Throw-away build stage to reduce size of final image
 FROM base AS build
 
@@ -46,6 +54,12 @@ RUN bundle install && \
 
 # Copy application code
 COPY . .
+
+# Place the React build where Rails serves it (see bin/build-frontend), drop its sources
+COPY --from=frontend /frontend/dist/assets ./public/assets
+COPY --from=frontend /frontend/dist/favicon.svg ./public/favicon.svg
+COPY --from=frontend /frontend/dist/index.html ./public/app.html
+RUN rm -rf frontend
 
 # Precompile bootsnap code for faster boot times.
 # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495

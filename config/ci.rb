@@ -8,6 +8,12 @@ CI.run do
   step "Security: Gem audit", "bin/bundler-audit"
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
 
+  step "Tests: RSpec", "bundle exec rspec"
+
+  step "Frontend: Lint", "cd frontend && npm run lint"
+  step "Frontend: Type check and build", "cd frontend && npm run build"
+  step "Frontend: Tests", "cd frontend && npm test"
+
 
   # Optional: set a green GitHub commit status to unblock PR merge.
   # Requires the `gh` CLI and `gh extension install basecamp/gh-signoff`.

@@ -31,3 +31,8 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+
+# Built React app (bin/build-frontend / Docker build)
+/public/assets
+/public/app.html
+/public/favicon.svg
