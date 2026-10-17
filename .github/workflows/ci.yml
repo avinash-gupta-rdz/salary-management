@@ -64,7 +64,8 @@ jobs:
       - name: Run specs
         env:
           RAILS_ENV: test
-        run: bin/rails db:prepare && bundle exec rspec
+        # db:test:prepare loads the schema only; db:prepare would also run the seeds (10k employees).
+        run: bin/rails db:test:prepare && bundle exec rspec
 
   frontend:
     runs-on: ubuntu-latest
